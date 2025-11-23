@@ -17,6 +17,20 @@ async function main() {
     },
   })
 
+  const employee = await prisma.employee.upsert({
+    where: { email: 'ric.lab3@gmail.com' },
+    update: {},
+    create: {
+      name: 'Admin User',
+      email: 'ric.lab3@gmail.com',
+      department: 'TI',
+      access_level: 4,
+      createdBy: 'SYSTEM',
+    },
+  })
+
+  console.log({ user, employee })
+
   console.log({ user })
 }
 

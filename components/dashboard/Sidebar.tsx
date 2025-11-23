@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileText, CheckSquare, Settings, LogOut, Truck } from "lucide-react";
+import { Home, FileText, CheckSquare, Settings, LogOut, Truck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
@@ -19,6 +19,7 @@ const navItems = [
     { href: "/dashboard/requests", label: "Minhas Solicitações", icon: FileText },
     { href: "/dashboard/approvals", label: "Aprovações", icon: CheckSquare },
     { href: "/dashboard/suppliers", label: "Fornecedores", icon: Truck },
+    { href: "/funcionarios", label: "Funcionários", icon: Users },
     { href: "/dashboard/settings", label: "Configurações", icon: Settings },
 ];
 

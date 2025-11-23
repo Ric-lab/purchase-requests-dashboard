@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import type { User } from "@prisma/client"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [
@@ -39,7 +40,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
         async jwt({ token, user }) {
             if (user) {
-                token.role = (user as any).role;
+                const dbUser = user as User;
+                token.role = dbUser.role;
             }
             return token;
         }

@@ -135,7 +135,7 @@ export default function NewSupplierPage() {
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem className="md:col-span-2">
-                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        <FormLabel>
                                             Razão Social
                                         </FormLabel>
                                         <FormControl>
@@ -143,7 +143,7 @@ export default function NewSupplierPage() {
                                                 <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                                                 <Input
                                                     placeholder="Ex: Tech Supplies Ltda"
-                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    className="pl-9"
                                                     disabled={isPending}
                                                     {...field}
                                                 />
@@ -160,7 +160,7 @@ export default function NewSupplierPage() {
                                 name="cnpj"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        <FormLabel>
                                             CNPJ
                                         </FormLabel>
                                         <FormControl>
@@ -168,7 +168,7 @@ export default function NewSupplierPage() {
                                                 <FileText className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                                                 <Input
                                                     placeholder="00.000.000/0001-00"
-                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    className="pl-9"
                                                     disabled={isPending}
                                                     {...field}
                                                     onChange={(e) => {
@@ -188,7 +188,7 @@ export default function NewSupplierPage() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        <FormLabel>
                                             Email Corporativo
                                         </FormLabel>
                                         <FormControl>
@@ -196,7 +196,7 @@ export default function NewSupplierPage() {
                                                 <Mail className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                                                 <Input
                                                     placeholder="contato@empresa.com"
-                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    className="pl-9"
                                                     disabled={isPending}
                                                     {...field}
                                                 />
@@ -213,7 +213,7 @@ export default function NewSupplierPage() {
                                 name="contactName"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        <FormLabel>
                                             Nome do Contato
                                         </FormLabel>
                                         <FormControl>
@@ -221,7 +221,7 @@ export default function NewSupplierPage() {
                                                 <User className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                                                 <Input
                                                     placeholder="Ex: João Silva"
-                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    className="pl-9"
                                                     disabled={isPending}
                                                     {...field}
                                                 />
@@ -238,7 +238,7 @@ export default function NewSupplierPage() {
                                 name="phone"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        <FormLabel>
                                             Telefone / WhatsApp
                                         </FormLabel>
                                         <FormControl>
@@ -246,7 +246,7 @@ export default function NewSupplierPage() {
                                                 <Phone className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                                                 <Input
                                                     placeholder="(11) 99999-9999"
-                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    className="pl-9"
                                                     disabled={isPending}
                                                     {...field}
                                                     onChange={(e) => {
@@ -266,7 +266,7 @@ export default function NewSupplierPage() {
                                 name="categories"
                                 render={({ field }) => (
                                     <FormItem className="md:col-span-2">
-                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 block">
+                                        <FormLabel className="mb-3 block">
                                             Categorias de Atuação
                                         </FormLabel>
                                         <div className="flex flex-wrap gap-2">
@@ -279,8 +279,8 @@ export default function NewSupplierPage() {
                                                         className={`
                                                             cursor-pointer px-3 py-1.5 text-sm font-normal transition-all
                                                             ${isSelected
-                                                                ? "bg-primary hover:bg-primary/90 shadow-sm"
-                                                                : "bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300"
+                                                                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
+                                                                : "bg-white hover:bg-slate-50 border-slate-200 text-slate-600"
                                                             }
                                                         `}
                                                         onClick={() => toggleCategory(category)}
@@ -308,12 +308,11 @@ export default function NewSupplierPage() {
                             </div>
                         )}
 
-                        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
+                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                             <Link href="/dashboard/suppliers">
                                 <Button
                                     type="button"
-                                    variant="ghost"
-                                    className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                    variant="outline"
                                     disabled={isPending}
                                 >
                                     Cancelar
@@ -322,7 +321,7 @@ export default function NewSupplierPage() {
                             <Button
                                 type="submit"
                                 disabled={isPending}
-                                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-6"
+                                className="bg-slate-900 hover:bg-slate-800"
                             >
                                 {isPending ? "Salvando..." : "Salvar Fornecedor"}
                             </Button>
