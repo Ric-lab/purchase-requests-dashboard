@@ -55,7 +55,8 @@ enum RequestStatus {
 
 model PurchaseRequest {
   id            String        @id @default(cuid())
-  code          String        @unique
+  sequenceId    Int           @default(autoincrement())
+  code          String?       @unique
   userId        String
   user          User          @relation(fields: [userId], references: [id])
   status        RequestStatus @default(DRAFT)
@@ -65,6 +66,33 @@ model PurchaseRequest {
   items         Json
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  updatedBy     String?
+
+  // Audit Fields
+  deletedAt     DateTime?
+  deletedBy     String?
+  approvedAt    DateTime?
+  approvedBy    String?
+}
+
+model Supplier {
+  id          String    @id @default(cuid())
+  name        String
+  cnpj        String    @unique
+  email       String
+  contactName String
+  phone       String
+  categories  Json      // Storing as JSON for multi-select tags
+
+  // Audit Fields
+  createdAt   DateTime  @default(now())
+  createdBy   String
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+  deletedAt   DateTime?
+  deletedBy   String?
+
+  @@map("suppliers")
 }
 
 model VerificationToken {

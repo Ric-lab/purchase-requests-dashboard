@@ -22,7 +22,9 @@ export default async function RequestsPage() {
 
         return {
             id: req.id,
+            sequenceId: req.sequenceId,
             createdAt: req.createdAt.toISOString(),
+            desiredDate: req.dueDate ? req.dueDate.toISOString() : new Date().toISOString(), // Handle null dueDate
             description: req.justification,
             category: firstItem.description || "N/A", // Using description as category based on previous form logic
             quantity: firstItem.quantity || 0,

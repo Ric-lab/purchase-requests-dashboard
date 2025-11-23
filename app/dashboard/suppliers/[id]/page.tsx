@@ -1,0 +1,431 @@
+"use client";
+
+import { useState, useTransition, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { updateSupplier, deleteSupplier, getSupplierById } from "@/actions/suppliers";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Building2, Mail, Phone, User, FileText, ArrowLeft, Trash2 } from "lucide-react";
+import Link from "next/link";
+
+// Masking functions
+const maskCNPJ = (value: string) => {
+    return value
+        .replace(/\D/g, "")
+        .replace(/^(\d{2})(\d)/, "$1.$2")
+        .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1/$2")
+        .replace(/(\d{4})(\d)/, "$1-$2")
+        .substring(0, 18);
+};
+
+const maskPhone = (value: string) => {
+    return value
+        .replace(/\D/g, "")
+        .replace(/^(\d{2})(\d)/, "($1) $2")
+        .replace(/(\d{5})(\d)/, "$1-$2")
+        .substring(0, 15);
+};
+
+const SupplierSchema = z.object({
+    name: z.string().min(1, "Razão Social é obrigatória"),
+    cnpj: z.string().min(18, "CNPJ incompleto"),
+    email: z.string().email("Email inválido"),
+    contactName: z.string().min(1, "Nome do contato é obrigatório"),
+    phone: z.string().min(15, "Telefone incompleto"),
+    categories: z.array(z.string()).min(1, "Selecione pelo menos uma categoria"),
+});
+
+const AVAILABLE_CATEGORIES = [
+    "Eletrônicos",
+    "Informática",
+    "Material de Escritório",
+    "Limpeza e Higiene",
+    "Alimentos e Bebidas",
+    "Serviços",
+    "Manutenção",
+    "Construção",
+    "Outros",
+];
+
+export default function EditSupplierPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    const router = useRouter();
+    const [error, setError] = useState<string>("");
+    const [success, setSuccess] = useState<string>("");
+    const [isPending, startTransition] = useTransition();
+    const [isLoading, setIsLoading] = useState(true);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+    const form = useForm<z.infer<typeof SupplierSchema>>({
+        resolver: zodResolver(SupplierSchema),
+        defaultValues: {
+            name: "",
+            cnpj: "",
+            email: "",
+            contactName: "",
+            phone: "",
+            categories: [],
+        },
+    });
+
+    useEffect(() => {
+        const fetchSupplier = async () => {
+            const result = await getSupplierById(id);
+            if (result.error) {
+                setError(result.error);
+                setIsLoading(false);
+                return;
+            }
+            if (result.supplier) {
+                form.reset({
+                    name: result.supplier.name,
+                    cnpj: result.supplier.cnpj,
+                    email: result.supplier.email,
+                    contactName: result.supplier.contactName,
+                    phone: result.supplier.phone,
+                    categories: result.supplier.categories as string[],
+                });
+            }
+            setIsLoading(false);
+        };
+        fetchSupplier();
+    }, [id, form]);
+
+    const onSubmit = (values: z.infer<typeof SupplierSchema>) => {
+        setError("");
+        setSuccess("");
+
+        startTransition(() => {
+            updateSupplier(id, values).then((data) => {
+                if (data?.error) {
+                    setError(data.error);
+                }
+                if (data?.success) {
+                    setSuccess(data.success as string);
+                    setTimeout(() => {
+                        router.push("/dashboard/suppliers");
+                    }, 1000);
+                }
+            });
+        });
+    };
+
+    const handleDelete = () => {
+        setIsDeleteOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        startTransition(() => {
+            deleteSupplier(id).then((data) => {
+                if (data?.error) {
+                    setError(data.error);
+                    setIsDeleteOpen(false);
+                }
+                if (data?.success) {
+                    setIsDeleteOpen(false);
+                    router.push("/dashboard/suppliers");
+                }
+            });
+        });
+    };
+
+    const toggleCategory = (category: string) => {
+        const current = form.getValues("categories");
+        if (current.includes(category)) {
+            form.setValue(
+                "categories",
+                current.filter((c) => c !== category)
+            );
+        } else {
+            form.setValue("categories", [...current, category]);
+        }
+    };
+
+    if (isLoading) {
+        return <div className="p-8 text-center text-zinc-500">Carregando...</div>;
+    }
+
+    return (
+        <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/suppliers">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-900">Editar Fornecedor</h1>
+                        <p className="text-slate-500 mt-2">
+                            Atualize os dados do fornecedor ou exclua o registro.
+                        </p>
+                    </div>
+                </div>
+                <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={isPending}
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir Fornecedor
+                </Button>
+            </div>
+
+            <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Excluir Fornecedor</DialogTitle>
+                        <DialogDescription>
+                            Tem certeza que deseja excluir este fornecedor? Esta ação não pode ser desfeita imediatamente, mas o registro será mantido no histórico.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteOpen(false)}
+                            disabled={isPending}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmDelete}
+                            disabled={isPending}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                        >
+                            {isPending ? "Excluindo..." : "Confirmar Exclusão"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <div className="rounded-2xl bg-white/60 backdrop-blur-xl border border-white/20 p-8 shadow-lg">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Razão Social */}
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem className="md:col-span-2">
+                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                            Razão Social
+                                        </FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                                                <Input
+                                                    placeholder="Ex: Tech Supplies Ltda"
+                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    disabled={isPending}
+                                                    {...field}
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* CNPJ */}
+                            <FormField
+                                control={form.control}
+                                name="cnpj"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                            CNPJ
+                                        </FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <FileText className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                                                <Input
+                                                    placeholder="00.000.000/0001-00"
+                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    disabled={isPending}
+                                                    {...field}
+                                                    onChange={(e) => {
+                                                        field.onChange(maskCNPJ(e.target.value));
+                                                    }}
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Email */}
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                            Email Corporativo
+                                        </FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                                                <Input
+                                                    placeholder="contato@empresa.com"
+                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    disabled={isPending}
+                                                    {...field}
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Contato */}
+                            <FormField
+                                control={form.control}
+                                name="contactName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                            Nome do Contato
+                                        </FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <User className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                                                <Input
+                                                    placeholder="Ex: João Silva"
+                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    disabled={isPending}
+                                                    {...field}
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Telefone */}
+                            <FormField
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                            Telefone / WhatsApp
+                                        </FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Phone className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                                                <Input
+                                                    placeholder="(11) 99999-9999"
+                                                    className="pl-9 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+                                                    disabled={isPending}
+                                                    {...field}
+                                                    onChange={(e) => {
+                                                        field.onChange(maskPhone(e.target.value));
+                                                    }}
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Categorias */}
+                            <FormField
+                                control={form.control}
+                                name="categories"
+                                render={({ field }) => (
+                                    <FormItem className="md:col-span-2">
+                                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 block">
+                                            Categorias de Atuação
+                                        </FormLabel>
+                                        <div className="flex flex-wrap gap-2">
+                                            {AVAILABLE_CATEGORIES.map((category) => {
+                                                const isSelected = field.value.includes(category);
+                                                return (
+                                                    <Badge
+                                                        key={category}
+                                                        variant={isSelected ? "default" : "outline"}
+                                                        className={`
+                                                            cursor-pointer px-3 py-1.5 text-sm font-normal transition-all
+                                                            ${isSelected
+                                                                ? "bg-primary hover:bg-primary/90 shadow-sm"
+                                                                : "bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300"
+                                                            }
+                                                        `}
+                                                        onClick={() => toggleCategory(category)}
+                                                    >
+                                                        {category}
+                                                    </Badge>
+                                                );
+                                            })}
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="bg-red-500/15 p-3 rounded-md text-sm text-red-500">
+                                {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="bg-emerald-500/15 p-3 rounded-md text-sm text-emerald-500">
+                                {success}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
+                            <Link href="/dashboard/suppliers">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                    disabled={isPending}
+                                >
+                                    Cancelar
+                                </Button>
+                            </Link>
+                            <Button
+                                type="submit"
+                                disabled={isPending}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-6"
+                            >
+                                {isPending ? "Salvando..." : "Salvar Alterações"}
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </div>
+        </div>
+    );
+}
